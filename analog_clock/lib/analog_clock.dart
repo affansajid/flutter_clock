@@ -11,7 +11,7 @@ import 'package:intl/intl.dart';
 import 'package:vector_math/vector_math_64.dart' show radians;
 
 import 'container_hand.dart';
-import 'drawn_hand.dart';
+import 'container_second.dart';
 
 /// Total distance traveled by a second or a minute hand, each second or minute,
 /// respectively.
@@ -20,9 +20,6 @@ final radiansPerTick = radians(360 / 60);
 /// Total distance traveled by an hour hand, each hour, in radians.
 final radiansPerHour = radians(360 / 12);
 
-/// A basic analog clock.
-///
-/// You can do better than this!
 class AnalogClock extends StatefulWidget {
   const AnalogClock(this.model);
 
@@ -34,44 +31,19 @@ class AnalogClock extends StatefulWidget {
 
 class _AnalogClockState extends State<AnalogClock> {
   var _now = DateTime.now();
-  var _temperature = '';
-  var _temperatureRange = '';
-  var _condition = '';
-  var _location = '';
   Timer _timer;
 
   @override
   void initState() {
     super.initState();
-    widget.model.addListener(_updateModel);
     // Set the initial values.
     _updateTime();
-    _updateModel();
-  }
-
-  @override
-  void didUpdateWidget(AnalogClock oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.model != oldWidget.model) {
-      oldWidget.model.removeListener(_updateModel);
-      widget.model.addListener(_updateModel);
-    }
   }
 
   @override
   void dispose() {
     _timer?.cancel();
-    widget.model.removeListener(_updateModel);
     super.dispose();
-  }
-
-  void _updateModel() {
-    setState(() {
-      _temperature = widget.model.temperatureString;
-      _temperatureRange = '(${widget.model.low} - ${widget.model.highString})';
-      _condition = widget.model.weatherString;
-      _location = widget.model.location;
-    });
   }
 
   void _updateTime() {
@@ -98,33 +70,21 @@ class _AnalogClockState extends State<AnalogClock> {
     final customTheme = Theme.of(context).brightness == Brightness.light
         ? Theme.of(context).copyWith(
             // Hour hand.
-            primaryColor: Color(0xFF4285F4),
+            primaryColor: Color(0xFF3C3A3A),
             // Minute hand.
-            highlightColor: Color(0xFF8AB4F8),
+            highlightColor: Color(0xFFFFCD79),
             // Second hand.
-            accentColor: Color(0xFF669DF6),
-            backgroundColor: Color(0xFFD2E3FC),
+            accentColor: Color(0xFF9F2C2C),
+            backgroundColor: Color(0xFFFFFFFF),
           )
         : Theme.of(context).copyWith(
-            primaryColor: Color(0xFFD2E3FC),
-            highlightColor: Color(0xFF4285F4),
-            accentColor: Color(0xFF8AB4F8),
-            backgroundColor: Color(0xFF3C4043),
+            primaryColor: Color(0xFF3C3A3A),
+            highlightColor: Color(0xFFC7AEAE),
+            accentColor: Color(0xFFFFFFFF),
+            backgroundColor: Color(0xFFC7AEAE),
           );
 
     final time = DateFormat.Hms().format(DateTime.now());
-    final weatherInfo = DefaultTextStyle(
-      style: TextStyle(color: customTheme.primaryColor),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(_temperature),
-          Text(_temperatureRange),
-          Text(_condition),
-          Text(_location),
-        ],
-      ),
-    );
 
     return Semantics.fromProperties(
       properties: SemanticsProperties(
@@ -135,42 +95,78 @@ class _AnalogClockState extends State<AnalogClock> {
         color: customTheme.backgroundColor,
         child: Stack(
           children: [
-            // Example of a hand drawn with [CustomPainter].
-            DrawnHand(
-              color: customTheme.accentColor,
-              thickness: 4,
-              size: 1,
-              angleRadians: _now.second * radiansPerTick,
-            ),
-            DrawnHand(
-              color: customTheme.highlightColor,
-              thickness: 16,
-              size: 0.9,
-              angleRadians: _now.minute * radiansPerTick,
-            ),
-            // Example of a hand drawn with [Container].
-            ContainerHand(
+            Transform.translate(
+                offset: Offset(0, 0),
+                child: Center(
+                  child: Container(
+                    width: 170,
+                    height: 170,
+                    decoration: BoxDecoration(
+                      color: customTheme.highlightColor,
+                      borderRadius: BorderRadius.circular(100),
+                    ),
+                  ),
+                )),
+            ContainerSecond(
               color: Colors.transparent,
-              size: 0.5,
-              angleRadians: _now.hour * radiansPerHour +
-                  (_now.minute / 60) * radiansPerHour,
+              angleRadians: _now.second * radiansPerTick,
               child: Transform.translate(
-                offset: Offset(0.0, -60.0),
+                offset: Offset(0.0, -76),
                 child: Container(
-                  width: 32,
-                  height: 150,
+                  width: 7,
+                  height: 7,
                   decoration: BoxDecoration(
-                    color: customTheme.primaryColor,
+                    color: customTheme.accentColor,
+                    borderRadius: BorderRadius.circular(100),
+                    boxShadow: [
+                      BoxShadow(
+                          blurRadius: 4,
+                          offset: Offset(0, 0),
+                          color: Color.fromARGB(64, 0, 0, 0))
+                    ],
                   ),
                 ),
               ),
             ),
-            Positioned(
-              left: 0,
-              bottom: 0,
-              child: Padding(
-                padding: const EdgeInsets.all(8),
-                child: weatherInfo,
+            ContainerHand(
+              color: Colors.transparent,
+              angleRadians: _now.minute * radiansPerTick + (_now.second / 60) * radiansPerTick,
+              child: Transform.translate(
+                offset: Offset(0.0, -30),
+                child: Container(
+                  width: 5,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: customTheme.primaryColor,
+                    boxShadow: [
+                      BoxShadow(
+                          blurRadius: 4,
+                          offset: Offset(0, 0),
+                          color: Color.fromARGB(64, 0, 0, 0))
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            ContainerHand(
+              color: Colors.transparent,
+              angleRadians: _now.hour * radiansPerHour +
+                  (_now.minute / 60) * radiansPerHour,
+              child: Transform.translate(
+                offset: Offset(0.0, -10),
+                child: Container(
+                  width: 5,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: customTheme.primaryColor,
+                    boxShadow: [
+                      BoxShadow(
+                          blurRadius: 4,
+                          offset: Offset(0, 0),
+                          color: Color.fromARGB(64, 0, 0, 0))
+                    ],
+                  ),
+                ),
               ),
             ),
           ],
