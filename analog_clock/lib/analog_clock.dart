@@ -11,7 +11,6 @@ import 'package:intl/intl.dart';
 import 'package:vector_math/vector_math_64.dart' show radians;
 
 import 'container_hand.dart';
-import 'container_second.dart';
 
 /// Total distance traveled by a second or a minute hand, each second or minute,
 /// respectively.
@@ -107,9 +106,9 @@ class _AnalogClockState extends State<AnalogClock> {
                     ),
                   ),
                 )),
-            ContainerSecond(
-              color: Colors.transparent,
+            ContainerHand(
               angleRadians: _now.second * radiansPerTick,
+              duration: 1,
               child: Transform.translate(
                 offset: Offset(0.0, -76),
                 child: Container(
@@ -129,8 +128,8 @@ class _AnalogClockState extends State<AnalogClock> {
               ),
             ),
             ContainerHand(
-              color: Colors.transparent,
               angleRadians: _now.minute * radiansPerTick + (_now.second / 60) * radiansPerTick,
+              duration: 60,
               child: Transform.translate(
                 offset: Offset(0.0, -30),
                 child: Container(
@@ -149,9 +148,9 @@ class _AnalogClockState extends State<AnalogClock> {
               ),
             ),
             ContainerHand(
-              color: Colors.transparent,
               angleRadians: _now.hour * radiansPerHour +
                   (_now.minute / 60) * radiansPerHour,
+              duration: 720,
               child: Transform.translate(
                 offset: Offset(0.0, -10),
                 child: Container(
