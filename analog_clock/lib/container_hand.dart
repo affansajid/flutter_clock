@@ -1,42 +1,67 @@
 // Copyright 2019 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
+import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:animator/animator.dart';
 
-import 'hand.dart';
-
-/// A clock hand that is built out of the child of a [Container].
-///
-/// This hand does not scale according to the clock's size.
-/// This hand is used as the hour hand in our analog clock, and demonstrates
-/// building a hand using existing Flutter widgets.
-class ContainerHand extends Hand {
-  /// Create a const clock [Hand].
-  ///
+class ContainerHand extends StatelessWidget {
   /// All of the parameters are required and must not be null.
   const ContainerHand({
-    @required Color color,
-    @required double angleRadians,
-    this.child,
+    this.angleRadians,
+    this.duration,
+    this.color,
+    this.width,
+    this.height,
+    this.borderRadius,
+    this.offset,
   })  : assert(angleRadians != null),
-        super(
-          color: color,
-          angleRadians: angleRadians,
-        );
+        assert(duration != null),
+        assert(color != null),
+        assert(width != null),
+        assert(height != null),
+        assert(borderRadius != null),
+        assert(offset != null);
 
-  /// The child widget used as the clock hand and rotated by [angleRadians].
-  final Widget child;
+  final double angleRadians;
+  final int duration;
+  final Color color;
+  final double width;
+  final double height;
+  final double borderRadius;
+  final Offset offset;
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: SizedBox.expand(
-        child: Transform.rotate(
-          angle: angleRadians,
-          child: Container(
-            color: color,
-            child: Center(child: child),
+    return Animator(
+      tween: Tween<double>(begin: angleRadians, end: angleRadians + (2 * pi)),
+      resetAnimationOnRebuild: true,
+      duration: Duration(minutes: duration),
+      repeats: 0,
+      builder: (anim) => Center(
+        child: SizedBox.expand(
+          child: Transform.rotate(
+            angle: anim.value,
+            child: Center(
+              child: Transform.translate(
+                offset: offset,
+                child: Container(
+                  width: width,
+                  height: height,
+                  decoration: BoxDecoration(
+                    color: color,
+                    borderRadius: BorderRadius.circular(borderRadius),
+                    boxShadow: [
+                      BoxShadow(
+                          blurRadius: 2,
+                          offset: Offset.fromDirection(-anim.value + pi / 2, 2),
+                          color: Color.fromARGB(128, 0, 0, 0))
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ),
         ),
       ),
