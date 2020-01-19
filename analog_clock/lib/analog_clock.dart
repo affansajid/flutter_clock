@@ -28,28 +28,29 @@ class AnalogClock extends StatefulWidget {
   _AnalogClockState createState() => _AnalogClockState();
 }
 
-class _AnalogClockState extends State<AnalogClock> {
+class _AnalogClockState extends State<AnalogClock> with WidgetsBindingObserver {
   var _now = DateTime.now();
   Timer _timer;
 
   @override
   void initState() {
     super.initState();
-    // Set the initial values.
+    WidgetsBinding.instance.addObserver(this);
+
+    // Set the initial values for the time.
     _updateTime();
   }
 
   @override
   void dispose() {
     _timer?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
   void _updateTime() {
     setState(() {
       _now = DateTime.now();
-      // Update once per second. Make sure to do it at the beginning of each
-      // new second, so that the clock is accurate.
       _timer = Timer(
         Duration(minutes: 1) - Duration(seconds: _now.second),
         _updateTime,
@@ -58,21 +59,29 @@ class _AnalogClockState extends State<AnalogClock> {
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    bool isResuming = state == AppLifecycleState.resumed;
+    if (isResuming) {
+      _updateTime();
+    }
+  }
+
+  // Scale the size of the clock based on container size
+  double _scaleRatio(constraints) {
+    // Get shortSide from the BoxConstraints
+    final shortSide = constraints.maxHeight <= constraints.maxWidth
+        ? constraints.maxHeight
+        : constraints.maxWidth;
+
+    return shortSide / 200;
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // There are many ways to apply themes to your clock. Some are:
-    //  - Inherit the parent Theme (see ClockCustomizer in the
-    //    flutter_clock_helper package).
-    //  - Override the Theme.of(context).colorScheme.
-    //  - Create your own [ThemeData], demonstrated in [AnalogClock].
-    //  - Create a map of [Color]s to custom keys, demonstrated in
-    //    [DigitalClock].
     final customTheme = Theme.of(context).brightness == Brightness.light
         ? Theme.of(context).copyWith(
-            // Hour hand.
             primaryColor: Color(0xFF3C3A3A),
-            // Minute hand.
-            highlightColor: Color(0xFFFFCD79),
-            // Second hand.
+            highlightColor: Color(0xFFF3E7D7),
             accentColor: Color(0xFF9F2C2C),
             backgroundColor: Color(0xFFFFFFFF),
           )
@@ -92,83 +101,70 @@ class _AnalogClockState extends State<AnalogClock> {
       ),
       child: Container(
         color: customTheme.backgroundColor,
-        child: Stack(
-          children: [
-            Transform.translate(
-                offset: Offset(0, 0),
-                child: Center(
-                  child: Container(
-                    width: 170,
-                    height: 170,
-                    decoration: BoxDecoration(
-                      color: customTheme.highlightColor,
-                      borderRadius: BorderRadius.circular(100),
-                    ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final _ratio = _scaleRatio(constraints);
+
+            return Stack(
+              children: [
+                Container(
+                  child: Transform.scale(
+                    scale: _ratio,
+                    child: Transform.translate(
+                        offset: Offset(0, 0),
+                        child: Center(
+                          child: Container(
+                            width: 170,
+                            height: 170,
+                            decoration: BoxDecoration(
+                              color: customTheme.highlightColor,
+                              borderRadius: BorderRadius.circular(100),
+                            ),
+                          ),
+                        )),
                   ),
-                )),
-            ContainerHand(
-              angleRadians: _now.second * radiansPerTick,
-              duration: 1,
-              child: Transform.translate(
-                offset: Offset(0.0, -76),
-                child: Container(
-                  width: 7,
-                  height: 7,
-                  decoration: BoxDecoration(
+                ),
+                Transform.scale(
+                  scale: _ratio,
+                  child: ContainerHand(
+                    angleRadians: _now.second * radiansPerTick,
+                    duration: 1,
+                    width: 8,
+                    height: 8,
                     color: customTheme.accentColor,
-                    borderRadius: BorderRadius.circular(100),
-                    boxShadow: [
-                      BoxShadow(
-                          blurRadius: 4,
-                          offset: Offset(0, 0),
-                          color: Color.fromARGB(64, 0, 0, 0))
-                    ],
+                    borderRadius: 100,
+                    offset: Offset(0.0, -78),
                   ),
                 ),
-              ),
-            ),
-            ContainerHand(
-              angleRadians: _now.minute * radiansPerTick + (_now.second / 60) * radiansPerTick,
-              duration: 60,
-              child: Transform.translate(
-                offset: Offset(0.0, -30),
-                child: Container(
-                  width: 5,
-                  height: 80,
-                  decoration: BoxDecoration(
+                Transform.scale(
+                  scale: _ratio,
+                  child: ContainerHand(
+                    angleRadians: _now.minute * radiansPerTick +
+                        (_now.second / 60) * radiansPerTick,
+                    duration: 60,
+                    width: 6,
+                    height: 80,
                     color: customTheme.primaryColor,
-                    boxShadow: [
-                      BoxShadow(
-                          blurRadius: 4,
-                          offset: Offset(0, 0),
-                          color: Color.fromARGB(64, 0, 0, 0))
-                    ],
+                    borderRadius: 0,
+                    offset: Offset(0.0, -30),
                   ),
                 ),
-              ),
-            ),
-            ContainerHand(
-              angleRadians: _now.hour * radiansPerHour +
-                  (_now.minute / 60) * radiansPerHour,
-              duration: 720,
-              child: Transform.translate(
-                offset: Offset(0.0, -10),
-                child: Container(
-                  width: 5,
-                  height: 40,
-                  decoration: BoxDecoration(
+                Transform.scale(
+                  scale: _ratio,
+                  child: ContainerHand(
+                    angleRadians: _now.hour * radiansPerHour +
+                        (_now.minute / 60) * radiansPerHour,
+                    duration: 720,
+                    width: 6,
+                    height: 40,
                     color: customTheme.primaryColor,
-                    boxShadow: [
-                      BoxShadow(
-                          blurRadius: 4,
-                          offset: Offset(0, 0),
-                          color: Color.fromARGB(64, 0, 0, 0))
-                    ],
+                    borderRadius: 0,
+                    offset: Offset(0.0, -10),
                   ),
                 ),
-              ),
-            ),
-          ],
+              ],
+            );
+          },
         ),
       ),
     );
