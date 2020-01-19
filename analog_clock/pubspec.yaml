@@ -1,6 +1,7 @@
-name: analog_clock
+name: fluid_clock
 description: Analog clock.
 version: 1.0.0+1
+repository: https://github.com/affansajid/flutter_clock.git
 
 environment:
   sdk: ">=2.1.0 <3.0.0"
