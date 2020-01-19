@@ -12,6 +12,9 @@ import 'package:vector_math/vector_math_64.dart' show radians;
 
 import 'container_hand.dart';
 
+/// Total distance traveled in a millisecond
+final radiansPerMillisecond = radians(360 / 60000);
+
 /// Total distance traveled by a second or a minute hand, each second or minute,
 /// respectively.
 final radiansPerTick = radians(360 / 60);
@@ -36,7 +39,6 @@ class _AnalogClockState extends State<AnalogClock> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-
     // Set the initial values for the time.
     _updateTime();
   }
@@ -58,6 +60,7 @@ class _AnalogClockState extends State<AnalogClock> with WidgetsBindingObserver {
     });
   }
 
+  // When app state is resumed, make sure time is accurate
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     bool isResuming = state == AppLifecycleState.resumed;
@@ -74,6 +77,14 @@ class _AnalogClockState extends State<AnalogClock> with WidgetsBindingObserver {
         : constraints.maxWidth;
 
     return shortSide / 200;
+  }
+
+  /// Build will be called redundantly, but need to update the time
+  /// to reset the animation
+  @override
+  void didUpdateWidget(Widget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _updateTime();
   }
 
   @override
@@ -127,7 +138,8 @@ class _AnalogClockState extends State<AnalogClock> with WidgetsBindingObserver {
                 Transform.scale(
                   scale: _ratio,
                   child: ContainerHand(
-                    angleRadians: _now.second * radiansPerTick,
+                    angleRadians: (_now.second * radiansPerTick) +
+                        (_now.millisecond * radiansPerMillisecond),
                     duration: 1,
                     width: 8,
                     height: 8,
@@ -139,8 +151,8 @@ class _AnalogClockState extends State<AnalogClock> with WidgetsBindingObserver {
                 Transform.scale(
                   scale: _ratio,
                   child: ContainerHand(
-                    angleRadians: _now.minute * radiansPerTick +
-                        (_now.second / 60) * radiansPerTick,
+                    angleRadians: (_now.minute * radiansPerTick) +
+                        ((_now.second / 60) * radiansPerTick),
                     duration: 60,
                     width: 6,
                     height: 80,
@@ -152,8 +164,8 @@ class _AnalogClockState extends State<AnalogClock> with WidgetsBindingObserver {
                 Transform.scale(
                   scale: _ratio,
                   child: ContainerHand(
-                    angleRadians: _now.hour * radiansPerHour +
-                        (_now.minute / 60) * radiansPerHour,
+                    angleRadians: (_now.hour * radiansPerHour) +
+                        ((_now.minute / 60) * radiansPerHour),
                     duration: 720,
                     width: 6,
                     height: 40,

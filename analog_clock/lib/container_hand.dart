@@ -16,7 +16,7 @@ class ContainerHand extends StatelessWidget {
     this.height,
     this.borderRadius,
     this.offset,
-  }) : assert(angleRadians != null),
+  })  : assert(angleRadians != null),
         assert(duration != null),
         assert(color != null),
         assert(width != null),
@@ -36,30 +36,28 @@ class ContainerHand extends StatelessWidget {
   Widget build(BuildContext context) {
     return Animator(
       tween: Tween<double>(begin: angleRadians, end: angleRadians + (2 * pi)),
+      resetAnimationOnRebuild: true,
       duration: Duration(minutes: duration),
       repeats: 0,
       builder: (anim) => Center(
         child: SizedBox.expand(
           child: Transform.rotate(
             angle: anim.value,
-            child: Container(
-              child: Center(
-                child: Transform.translate(
-                  offset: offset,
-                  child: Container(
-                    width: width,
-                    height: height,
-                    decoration: BoxDecoration(
-                      color: color,
-                      borderRadius: BorderRadius.circular(borderRadius),
-                      boxShadow: [
-                        BoxShadow(
-                            blurRadius: 2,
-                            offset:
-                                Offset.fromDirection(-anim.value + pi / 2, 2),
-                            color: Color.fromARGB(128, 0, 0, 0))
-                      ],
-                    ),
+            child: Center(
+              child: Transform.translate(
+                offset: offset,
+                child: Container(
+                  width: width,
+                  height: height,
+                  decoration: BoxDecoration(
+                    color: color,
+                    borderRadius: BorderRadius.circular(borderRadius),
+                    boxShadow: [
+                      BoxShadow(
+                          blurRadius: 2,
+                          offset: Offset.fromDirection(-anim.value + pi / 2, 2),
+                          color: Color.fromARGB(128, 0, 0, 0))
+                    ],
                   ),
                 ),
               ),
